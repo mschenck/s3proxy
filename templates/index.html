@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Welcome</title>
+</head>
+<body>
+
+ <FORM action="/upload/" enctype="multipart/form-data" method="post">
+	<input type="hidden" name="key" value="uploads/${filename}">
+	<input type="hidden" name="AWSAccessKeyId" value="{{ access_key }}"> 
+	<input type="hidden" name="acl" value="public-read"> 
+	<input type="hidden" name="policy" value="{{ policy }}">
+	<input type="hidden" name="Signature" value="{{ signature }}"> 
+	<input type="hidden" name="success_action_redirect" value="{{ url }}">
+
+	File:<input name="file" type="file" /><br/>
+	<input name="submit" value="Upload" type="submit" />
+ </FORM>
+
+</body>
+</html>

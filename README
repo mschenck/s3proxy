@@ -1,0 +1,9 @@
+
+################################################################################
+#Setup
+################################################################################
+nginx.conf:
+    Correct the "proxy_pass http://BUCKET-NAME.s3.amazonaws.com/;" line to use 
+    your particular S3 bucket name
+
+
