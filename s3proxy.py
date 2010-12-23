@@ -1,22 +1,20 @@
-#!/bin/env python
+#!/usr/bin/env python2.6
 
 import base64
+import sys
 import hmac
 import hashlib
 import logging
 import logging.handlers
 import time
 import simplejson
+import ConfigParser
 
 from flask import Flask, render_template, request
 app = Flask('Uploader')
 
-aws_access_key = "<Insert AWS Access Key>"
-aws_secret_key = "<Insert AWS Secret Key>"
-s3_bucket = "up-test-bk"
-logging.getLogger().setLevel(logging.INFO)
+config_file = "s3proxy.conf"
 success_path = "upload-success"
-signature_timeout = 600
 
 def gen_file_policy(success_url="/"):
     file_policy = {}
@@ -59,4 +57,22 @@ def uploadSuccess():
     return 'Upload Successful!'
 
 if __name__ == "__main__":
+    config = ConfigParser.ConfigParser()
+    config.read(config_file)
+
+    logging.getLogger().setLevel(logging.INFO)
+
+    try:
+        # AWS auth details
+        aws_access_key = config.get("AWSauth", "aws_access_key")
+        aws_secret_key = config.get("AWSauth", "aws_secret_key")
+
+        # S3 configuration details
+        s3_bucket = config.get("S3config", "s3_bucket")
+        signature_timeout = int(config.get("S3config", "signature_timeout"))
+    except Exception, e:
+        logging.error("Error reading config file [%s]: %s" % (config_file, e))    
+        sys.exit(1)
+
+    # Start the application
     app.run()
