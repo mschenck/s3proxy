@@ -44,9 +44,15 @@ def sign_encoded_policy(encoded_policy=None):
 @app.route("/")
 def draw_form():
     url = request.url_root
-    success_url = "%s%s" % (url, success_path)
-    file_policy = gen_file_policy(success_url)
 
+    try:
+        timestamp = time.gmtime()
+        hash = base64.encodestring(hmac.new("ID", str(timestamp), hashlib.sha1).digest()).strip()
+        success_url = "%s%s?id=%s" % (url, success_path, hash)
+    except Exception, e:
+        logging.error( "Error generating job hash: %s" % e )
+
+    file_policy = gen_file_policy(success_url)
     policy = encode_policy(file_policy)
     signature = sign_encoded_policy(policy)
     return render_template('index.html', policy=policy, access_key=aws_access_key, \
@@ -54,7 +60,8 @@ def draw_form():
 
 @app.route("/upload-success")
 def uploadSuccess():
-    return 'Upload Successful!'
+    hash = request.args.get("id", "")
+    return "Upload Successful! hash=%s" % hash
 
 if __name__ == "__main__":
     config = ConfigParser.ConfigParser()
@@ -70,6 +77,9 @@ if __name__ == "__main__":
         # S3 configuration details
         s3_bucket = config.get("S3config", "s3_bucket")
         signature_timeout = int(config.get("S3config", "signature_timeout"))
+        sqs_enabled = bool(config.get("SQSconfig", "enabled"))
+        if sqs_enabled:
+            queue_name = config.get("SQSconfig", "queue_name")
     except Exception, e:
         logging.error("Error reading config file [%s]: %s" % (config_file, e))    
         sys.exit(1)
