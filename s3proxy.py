@@ -13,6 +13,9 @@ import ConfigParser
 from flask import Flask, render_template, request
 app = Flask('Uploader')
 
+from boto.sqs.connection import SQSConnection
+from boto.sqs.message import Message
+
 config_file = "s3proxy.conf"
 success_path = "upload-success"
 
@@ -45,12 +48,21 @@ def sign_encoded_policy(encoded_policy=None):
 def draw_form():
     url = request.url_root
 
+    # Create upload hash
     try:
         timestamp = time.gmtime()
         hash = base64.encodestring(hmac.new("ID", str(timestamp), hashlib.sha1).digest()).strip()
         success_url = "%s%s?id=%s" % (url, success_path, hash)
     except Exception, e:
         logging.error( "Error generating job hash: %s" % e )
+
+    # If SQS enabled, create job in uploading state
+    if sqs_enabled:
+        message = Message()
+        message_dict = {}
+        message_dict["ID"] = hash
+        message.set_body(message_dict)
+        status = queue.write(message)
 
     file_policy = gen_file_policy(success_url)
     policy = encode_policy(file_policy)
@@ -61,6 +73,7 @@ def draw_form():
 @app.route("/upload-success")
 def uploadSuccess():
     hash = request.args.get("id", "")
+    logging.info( "Request: %s" % request)
     return "Upload Successful! hash=%s" % hash
 
 if __name__ == "__main__":
@@ -77,9 +90,15 @@ if __name__ == "__main__":
         # S3 configuration details
         s3_bucket = config.get("S3config", "s3_bucket")
         signature_timeout = int(config.get("S3config", "signature_timeout"))
+
+        # SQS job queue configuration details
         sqs_enabled = bool(config.get("SQSconfig", "enabled"))
+        logging.info("sqs_enabled: %s" % sqs_enabled)
         if sqs_enabled:
             queue_name = config.get("SQSconfig", "queue_name")
+            conn = SQSConnection(aws_access_key, aws_secret_key)
+            queue = conn.create_queue(queue_name)
+
     except Exception, e:
         logging.error("Error reading config file [%s]: %s" % (config_file, e))    
         sys.exit(1)
