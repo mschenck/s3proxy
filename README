@@ -6,7 +6,10 @@ nginx.conf:
     Correct the "proxy_pass http://BUCKET-NAME.s3.amazonaws.com/;" line to use 
     your particular S3 bucket name
 
-upload_form.py:
+s3proxy.conf:
     Correct AWS API authentication details
         aws_access_key = "<Insert AWS Access Key>"
         aws_secret_key = "<Insert AWS Secret Key>"
+
+    Correct S3 bucket name
+        s3_bucket = "up-test-bk"
