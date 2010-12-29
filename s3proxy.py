@@ -61,7 +61,7 @@ def draw_form():
         message = Message()
         message_dict = {}
         message_dict["ID"] = hash
-        message.set_body(message_dict)
+        message.set_body( simplejson.dumps("%s" % message_dict) )
         status = queue.write(message)
 
     file_policy = gen_file_policy(success_url)
