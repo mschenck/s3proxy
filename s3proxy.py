@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.6
 
 import base64
+import re
+import string
 import sys
 import hmac
 import hashlib
@@ -14,7 +16,7 @@ from flask import Flask, render_template, request
 app = Flask('Uploader')
 
 from boto.sqs.connection import SQSConnection
-from boto.sqs.message import Message
+from boto.sqs.message import MHMessage
 
 config_file = "s3proxy.conf"
 success_path = "upload-success"
@@ -30,12 +32,14 @@ def gen_file_policy(success_url="/"):
     ]
     return simplejson.dumps(file_policy)
 
+
 def encode_policy(policy=None):
     try:
         return base64.b64encode("%s" % policy)
     except Exception, e:
 	logging.error("Caught exception in 'encode_policy' for policy [%s]: %s" % (policy, e) )
         return None
+
 
 def sign_encoded_policy(encoded_policy=None):
     try:
@@ -44,6 +48,7 @@ def sign_encoded_policy(encoded_policy=None):
 	logging.error("Caught exception in 'sign_encoded_policy' for encoded_policy [%s]: %s" % (encoded_policy, e) )
         return None
 
+
 @app.route("/")
 def draw_form():
     url = request.url_root
@@ -51,18 +56,10 @@ def draw_form():
     # Create upload hash
     try:
         timestamp = time.gmtime()
-        hash = base64.encodestring(hmac.new("ID", str(timestamp), hashlib.sha1).digest()).strip()
+        hash = base64.encodestring(hmac.new("ID", str(timestamp), hashlib.sha224).hexdigest()).strip()
         success_url = "%s%s?id=%s" % (url, success_path, hash)
     except Exception, e:
         logging.error( "Error generating job hash: %s" % e )
-
-    # If SQS enabled, create job in uploading state
-    if sqs_enabled:
-        message = Message()
-        message_dict = {}
-        message_dict["ID"] = hash
-        message.set_body( simplejson.dumps("%s" % message_dict) )
-        status = queue.write(message)
 
     file_policy = gen_file_policy(success_url)
     policy = encode_policy(file_policy)
@@ -70,11 +67,27 @@ def draw_form():
     return render_template('index.html', policy=policy, access_key=aws_access_key, \
 		signature=signature, url=success_url)
 
+
 @app.route("/upload-success")
 def uploadSuccess():
     hash = request.args.get("id", "")
-    logging.info( "Request: %s" % request)
+    bucket = request.args.get("bucket", "")
+    key = request.args.get("key", "")
+    asset_url = "http://%s.s3.amazonaws.com/%s" % (bucket, key)
+
+    logging.info( "Successful uploaded asset URL: %s" % asset_url )
+
+    # If SQS enabled, create job in uploading state
+    if sqs_enabled:
+        message = MHMessage()
+        message["ID"] = hash
+        message["STATUS"] = "READY"
+        message["ASSET_URL"] = asset_url
+        status = queue.write(message)
+        logging.info("Successfully queued asset URL: %s" % asset_url)
+
     return "Upload Successful! hash=%s" % hash
+
 
 if __name__ == "__main__":
     config = ConfigParser.ConfigParser()
@@ -98,6 +111,7 @@ if __name__ == "__main__":
             queue_name = config.get("SQSconfig", "queue_name")
             conn = SQSConnection(aws_access_key, aws_secret_key)
             queue = conn.create_queue(queue_name)
+            queue.set_message_class(MHMessage)
 
     except Exception, e:
         logging.error("Error reading config file [%s]: %s" % (config_file, e))    
