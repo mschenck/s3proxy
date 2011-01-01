@@ -101,6 +101,15 @@ def get_queue():
     else:
         return "Job queue not enabled"
 
+
+@app.route("/queue/count")
+def get_count():
+    if sqs_enabled:
+        return str(queue.count())
+    else:
+        return "-1"
+
+
 if __name__ == "__main__":
     config = ConfigParser.ConfigParser()
     config.read(config_file)
