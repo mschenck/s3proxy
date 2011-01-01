@@ -6,6 +6,7 @@
         .row div { float: left; padding-left: 20px; }
         .row .count { width: 50px; }
         .row .status { width: 80px; }
+        .row .asset { width: 780px; }
     </style>
 </head>
 <body>
@@ -15,12 +16,14 @@
     <div class="row" style="font-weight:bold; background:grey;">
         <div class="count">Count</div>
         <div class="status">Status</div>
+        <div class="asset">Asset URL</div>
     </div>
 
     {% for job in job_queue %}
     <div class="row" style="background:{{ loop.cycle("grey", "white") }};">
         <div class="count">{{ loop.index }}</div>
         <div class="status">{{ job["STATUS"] }}</div>
+        <div class="asset">{{ job["ASSET_URL"] }}</div>
     </div>
     {% endfor %}
  </div>
