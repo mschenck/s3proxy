@@ -89,6 +89,18 @@ def uploadSuccess():
     return "Upload Successful! hash=%s" % hash
 
 
+@app.route("/queue")
+def get_queue():
+    if sqs_enabled:
+        try:
+            job_count = queue.count()
+            job_queue = queue.get_messages()
+            return render_template('queue.html', job_count=job_count, job_queue=job_queue)
+        except Exception, e:
+            return "Unabled to fetch job queue: %s" % e 
+    else:
+        return "Job queue not enabled"
+
 if __name__ == "__main__":
     config = ConfigParser.ConfigParser()
     config.read(config_file)
