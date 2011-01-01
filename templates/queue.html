@@ -2,30 +2,89 @@
 <head>
 <title>Welcome</title>
     <style>
-        .row {clear:both;}
-        .row div { float: left; padding-left: 20px; }
-        .row .count { width: 50px; }
+        body { background: #eee; padding: 0 10px 0 10px;}
+        #banner {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #banner .bubbles {
+            font-size: 22px;
+            font-weight: bold; 
+            background: white;
+            border: 1px solid black;
+            float: left;
+            padding: 10px;
+            margin: 5px;
+                                    
+            -webkit-border-top-left-radius: 10px;
+            -webkit-border-top-right-radius: 10px;
+            -webkit-border-bottom-left-radius: 10px;
+            -webkit-border-bottom-right-radius: 10px;
+            -moz-border-radius-topleft: 10px;
+            -moz-border-radius-topright: 10px;
+            -moz-border-radius-bottomleft: 10px;
+            -moz-border-radius-bottomright: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        #job_queue {
+            margin: 15px;
+            border: 1px solid black;
+            background: white;
+            clear: both;
+
+            -webkit-border-top-left-radius: 10px;
+            -webkit-border-top-right-radius: 10px;
+            -webkit-border-bottom-left-radius: 10px;
+            -webkit-border-bottom-right-radius: 10px;
+            -moz-border-radius-topleft: 10px;
+            -moz-border-radius-topright: 10px;
+            -moz-border-radius-bottomleft: 10px;
+            -moz-border-radius-bottomright: 10px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .row div { padding-left: 10px; float: left; }
+        #header { font-weight: bold; padding: 5px 0 5px; }
+        .row .count { width: 22px; }
         .row .status { width: 80px; }
-        .row .asset { width: 780px; }
+        .row .asset { width: 600px; }
+        .row { overflow: auto; }
     </style>
 </head>
 <body>
 
- <h1>Job Queue Size: {{ job_count }}</h1>
+ <div id="banner">
+    <div class="bubbles">
+        S3Proxy - Job Queue Size: {{ job_count }}
+    </div>
+    <p/>
+ </div>
+
  <div id="job_queue">
-    <div class="row" style="font-weight:bold; background:grey;">
-        <div class="count">Count</div>
+    <div class="row" id="header">
+        <div class="count">#</div>
         <div class="status">Status</div>
         <div class="asset">Asset URL</div>
+        <br/>
     </div>
 
     {% for job in job_queue %}
-    <div class="row" style="background:{{ loop.cycle("grey", "white") }};">
+    <div class="row" style="background:{{ loop.cycle("#daff96", "white") }};">
         <div class="count">{{ loop.index }}</div>
         <div class="status">{{ job["STATUS"] }}</div>
-        <div class="asset">{{ job["ASSET_URL"] }}</div>
+        <div class="asset"><a href='{{ job["ASSET_URL"] }}'>{{ job["ASSET_URL"] }}</a></div>
+        <br/>
     </div>
     {% endfor %}
+
+    <div class="row"> <div><br/> </div> </div>
  </div>
+
+
 </body>
 </html>
