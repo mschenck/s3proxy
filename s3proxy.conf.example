@@ -29,7 +29,7 @@ signature_timeout = 600
 # SQS configuration
 ################################################################################
 [SQSconfig]
-# Whether or not to add job to SQS (REQUIRED)
+# Whether or not to add job to SQS (Blank for false)
 enabled = True
 
 # Name of job queue in SQS
