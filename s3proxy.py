@@ -94,7 +94,7 @@ def get_queue():
     if sqs_enabled:
         try:
             job_count = queue.count()
-            job_queue = queue.get_messages(num_messages=max(1, job_count), visibility_timeout=0)
+            job_queue = queue.get_messages(num_messages=min(10, max(1, job_count)), visibility_timeout=0)
             return render_template('queue.html', job_count=job_count, job_queue=job_queue)
         except Exception, e:
             return "Unabled to fetch job queue: %s" % e 
